@@ -1,0 +1,39 @@
+name: nutri_leche
+description: Portal de Empleados Nutri Leche Ecuador
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Gestión de estado y servicios
+  provider: ^6.1.2
+  shared_preferences: ^2.3.2
+
+  # Internacionalización y localización
+  intl: ^0.20.2
+  flutter_localizations:
+    sdk: flutter
+
+  # Archivos y almacenamiento
+  path_provider: ^2.1.4
+  file_picker: ^8.1.2
+  image_picker: ^1.1.2
+
+  # PDF y herramientas de impresión
+  pdf: ^3.11.0
+  printing: ^5.12.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.2
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icono/nutrileche.png

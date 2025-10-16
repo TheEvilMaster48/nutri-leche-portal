@@ -1,0 +1,111 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart';
+import 'core/locale_provider.dart';
+import 'core/notification_banner.dart';
+import 'services/auth_service.dart';
+import 'services/evento_service.dart';
+import 'services/notificacion_service.dart';
+import 'services/usuario_service.dart';
+import 'services/global_notifier.dart';
+import 'services/language_service.dart';
+import 'screens/login.dart';
+import 'screens/registro.dart';
+import 'screens/menu.dart';
+import 'screens/eventos.dart';
+import 'screens/notificaciones.dart';
+import 'screens/chat.dart';
+import 'screens/recursos.dart';
+import 'screens/nuevo_chat.dart';
+import 'screens/chat_detalle.dart';
+import 'screens/crear_evento.dart';
+import 'screens/perfil.dart';
+import 'screens/editar_perfil.dart';
+import 'screens/configuracion_screen.dart';
+import 'screens/ayuda_screen.dart';
+import 'screens/acerca_screen.dart';
+import 'screens/noticias.dart';
+import 'screens/crear_publicacion.dart';
+
+void main() {
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => LocaleProvider()),
+        ChangeNotifierProvider(create: (_) => AuthService()),
+        ChangeNotifierProvider(create: (_) => EventoService()),
+        ChangeNotifierProvider(create: (_) => NotificacionService()),
+        ChangeNotifierProvider(create: (_) => UsuarioService()),
+        ChangeNotifierProvider(create: (_) => GlobalNotifier()),
+        ChangeNotifierProvider(create: (_) => LanguageService()),
+      ],
+      child: const MyApp(),
+    ),
+  );
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<LocaleProvider>(
+      builder: (context, localeProvider, child) {
+        return MaterialApp(
+          title: 'Nutri Leche Portal',
+          debugShowCheckedModeBanner: false,
+
+          // FIX: Localización global para que funcione showDatePicker
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('es', 'ES'),
+            Locale('en', 'US'),
+          ],
+          locale: const Locale('es', 'ES'), // idioma por defecto español
+
+          theme: ThemeData(
+            primarySwatch: Colors.blue,
+            useMaterial3: true,
+          ),
+
+          initialRoute: '/',
+          routes: {
+            '/': (context) => const LoginScreen(),
+            '/registro': (context) => const RegistroScreen(),
+            '/menu': (context) => const MenuScreen(),
+            '/eventos': (context) => const EventosScreen(),
+            '/notificaciones': (context) => const NotificacionesScreen(),
+            '/chat': (context) => const ChatScreen(),
+            '/recursos': (context) => const RecursosScreen(),
+            '/nuevo_chat': (context) => const NuevoChatScreen(),
+            '/crear_evento': (context) => const CrearEventoScreen(),
+            '/perfil': (context) => const PerfilScreen(),
+            '/editar_perfil': (context) => const EditarPerfilScreen(),
+            '/configuracion': (context) => const ConfiguracionScreen(),
+            '/ayuda': (context) => const AyudaScreen(),
+            '/acerca': (context) => const AcercaScreen(),
+            '/noticias': (context) => const NoticiasScreen(),
+            '/crear_publicacion': (context) => const CrearPublicacionScreen(),
+          },
+          onGenerateRoute: (settings) {
+            if (settings.name?.startsWith('/chat_detalle/') ?? false) {
+              final contactoNombre = settings.name!.split('/').last;
+              return MaterialPageRoute(
+                builder: (context) =>
+                    ChatDetalleScreen(contactoNombre: contactoNombre),
+              );
+            }
+            return null;
+          },
+          builder: (context, child) {
+            return child!;
+          },
+        );
+      },
+    );
+  }
+}
