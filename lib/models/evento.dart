@@ -4,8 +4,8 @@ class Evento {
   final String descripcion;
   final String fecha;
   final String creadoPor;
-  final String? imagenPath;
-  final String? archivoPath;
+  final String? imagenPath;   // ✅ Nuevo campo opcional
+  final String? archivoPath;  // ✅ Nuevo campo opcional
 
   Evento({
     required this.id,
@@ -37,3 +37,4 @@ class Evento {
         archivoPath: json['archivoPath'],
       );
 }
+

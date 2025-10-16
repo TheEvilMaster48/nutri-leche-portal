@@ -3,13 +3,16 @@ import 'package:provider/provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import '../services/auth_service.dart';
 import '../services/notificacion_service.dart';
 import '../core/notification_banner.dart';
 
 class RecursosScreen extends StatelessWidget {
   const RecursosScreen({super.key});
 
-  Future<void> _descargarPDF(BuildContext context, String titulo, String contenido) async {
+  // Descargar PDF
+  Future<void> _descargarPDF(
+      BuildContext context, String titulo, String contenido) async {
     try {
       final pdf = pw.Document();
 
@@ -90,8 +93,14 @@ class RecursosScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _editarYDescargarPDF(BuildContext context, String titulo, String contenidoInicial) async {
-    final TextEditingController controller = TextEditingController(text: contenidoInicial);
+  // Editar y descargar PDF (solo roles con permiso)
+  Future<void> _editarYDescargarPDF(
+    BuildContext context,
+    String titulo,
+    String contenidoInicial,
+  ) async {
+    final TextEditingController controller =
+        TextEditingController(text: contenidoInicial);
 
     await showDialog(
       context: context,
@@ -122,7 +131,8 @@ class RecursosScreen extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF3B82F6),
               ),
-              child: const Text('Descargar PDF', style: TextStyle(color: Colors.white)),
+              child: const Text('Descargar PDF',
+                  style: TextStyle(color: Colors.white)),
             ),
           ],
         );
@@ -132,6 +142,13 @@ class RecursosScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthService>();
+    final usuario = auth.currentUser;
+
+    // Roles con permiso para editar documentos y formularios
+    const rolesPermitidos = ['admin', 'recursos', 'bodega', 'produccion', 'ventas'];
+    final bool tienePermiso = rolesPermitidos.contains(usuario?.rol);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Recursos', style: TextStyle(color: Colors.white)),
@@ -144,45 +161,51 @@ class RecursosScreen extends StatelessWidget {
           _buildSeccion('Documentos de la Empresa'),
           _buildDocumentoCard(
             context,
-            'Manual del Empleado',
-            'Guía completa sobre políticas y procedimientos de la empresa',
-            Icons.book,
-            const Color(0xFF3B82F6),
-            _contenidoManualEmpleado,
+            titulo: 'Manual del Empleado',
+            descripcion:
+                'Guía completa sobre políticas y procedimientos de la empresa',
+            icono: Icons.book,
+            color: const Color(0xFF3B82F6),
+            contenido: _contenidoManualEmpleado,
+            puedeEditar: tienePermiso,
           ),
           _buildDocumentoCard(
             context,
-            'Código de Conducta',
-            'Normas éticas y de comportamiento profesional',
-            Icons.gavel,
-            const Color(0xFF4ADE80),
-            _contenidoCodigoConducta,
+            titulo: 'Código de Conducta',
+            descripcion: 'Normas éticas y de comportamiento profesional',
+            icono: Icons.gavel,
+            color: const Color(0xFF4ADE80),
+            contenido: _contenidoCodigoConducta,
+            puedeEditar: tienePermiso,
           ),
           _buildDocumentoCard(
             context,
-            'Políticas de Seguridad',
-            'Protocolos de seguridad y salud ocupacional',
-            Icons.security,
-            const Color(0xFFFBBF24),
-            _contenidoPoliticasSeguridad,
+            titulo: 'Políticas de Seguridad',
+            descripcion: 'Protocolos de seguridad y salud ocupacional',
+            icono: Icons.security,
+            color: const Color(0xFFFBBF24),
+            contenido: _contenidoPoliticasSeguridad,
+            puedeEditar: tienePermiso,
           ),
           const SizedBox(height: 20),
           _buildSeccion('Formularios'),
           _buildDocumentoCard(
             context,
-            'Solicitud de Vacaciones',
-            'Formato para solicitar días de vacaciones',
-            Icons.beach_access,
-            const Color(0xFFFF6B6B),
-            _contenidoSolicitudVacaciones,
+            titulo: 'Solicitud de Vacaciones',
+            descripcion: 'Formato para solicitar días de vacaciones',
+            icono: Icons.beach_access,
+            color: const Color(0xFFFF6B6B),
+            contenido: _contenidoSolicitudVacaciones,
+            puedeEditar: tienePermiso,
           ),
           _buildDocumentoCard(
             context,
-            'Reporte de Incidentes',
-            'Formato para reportar incidentes de seguridad',
-            Icons.report_problem,
-            const Color(0xFFA78BFA),
-            _contenidoReporteIncidentes,
+            titulo: 'Reporte de Incidentes',
+            descripcion: 'Formato para reportar incidentes de seguridad',
+            icono: Icons.report_problem,
+            color: const Color(0xFFA78BFA),
+            contenido: _contenidoReporteIncidentes,
+            puedeEditar: tienePermiso,
           ),
         ],
       ),
@@ -194,28 +217,24 @@ class RecursosScreen extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Text(
         titulo,
-        style: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
+        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
       ),
     );
   }
 
   Widget _buildDocumentoCard(
-    BuildContext context,
-    String titulo,
-    String descripcion,
-    IconData icono,
-    Color color,
-    String contenido,
-  ) {
+    BuildContext context, {
+    required String titulo,
+    required String descripcion,
+    required IconData icono,
+    required Color color,
+    required String contenido,
+    required bool puedeEditar,
+  }) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
         leading: Container(
@@ -229,10 +248,7 @@ class RecursosScreen extends StatelessWidget {
         ),
         title: Text(
           titulo,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4),
@@ -241,15 +257,17 @@ class RecursosScreen extends StatelessWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (puedeEditar)
+              IconButton(
+                icon: const Icon(Icons.edit, color: Colors.blueAccent),
+                tooltip: 'Editar y descargar',
+                onPressed: () =>
+                    _editarYDescargarPDF(context, titulo, contenido),
+              ),
             IconButton(
-              icon: Icon(Icons.edit, color: color),
-              onPressed: () => _editarYDescargarPDF(context, titulo, contenido),
-              tooltip: 'Editar y descargar',
-            ),
-            IconButton(
-              icon: Icon(Icons.download, color: color),
-              onPressed: () => _descargarPDF(context, titulo, contenido),
+              icon: const Icon(Icons.download, color: Colors.indigo),
               tooltip: 'Descargar PDF',
+              onPressed: () => _descargarPDF(context, titulo, contenido),
             ),
           ],
         ),
@@ -257,7 +275,8 @@ class RecursosScreen extends StatelessWidget {
     );
   }
 
-  // Contenidos de ejemplo para los documentos
+  // -------------------- CONTENIDO DE LOS DOCUMENTOS --------------------
+
   static const String _contenidoManualEmpleado = '''
 MANUAL DEL EMPLEADO - NUTRI LECHE ECUADOR
 

@@ -7,16 +7,66 @@ class MenuScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthService>();
+    final usuario = auth.currentUser;
+    final rol = usuario?.rol ?? 'empleado';
+
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
+    // Menús
+    final List<Map<String, dynamic>> menus = [
+      {
+        'titulo': 'Eventos',
+        'subtitulo': rol == 'admin'
+            ? 'Gestionar eventos'
+            : 'Ver calendario y actividades',
+        'icono': Icons.event_available_rounded,
+        'ruta': '/eventos',
+        'colores': [
+          const Color.fromARGB(255, 0, 72, 255),
+          const Color(0xFF64B5F6)
+        ],
+      },
+      {
+        'titulo': 'Notificaciones',
+        'subtitulo':
+            rol == 'admin' ? 'Avisos del sistema' : 'Ver avisos importantes',
+        'icono': Icons.notifications_active_rounded,
+        'ruta': '/notificaciones',
+        'colores': [
+          const Color.fromARGB(255, 250, 0, 0),
+          const Color(0xFF00ACC1)
+        ],
+      },
+      {
+        'titulo': 'Chat',
+        'subtitulo': 'Comunicación interna',
+        'icono': Icons.chat_rounded,
+        'ruta': '/chat',
+        'colores': [
+          const Color.fromARGB(255, 0, 150, 7),
+          const Color(0xFF81C784)
+        ],
+      },
+      {
+        'titulo': 'Recursos',
+        'subtitulo': 'Editar, descargar y administrar documentos',
+        'icono': Icons.folder_copy_rounded,
+        'ruta': '/recursos',
+        'colores': [
+          const Color.fromARGB(255, 157, 0, 255),
+          const Color(0xFF9575CD)
+        ],
+      },
+    ];
+
     return Scaffold(
-      backgroundColor:
-          const Color.fromARGB(255, 1, 121, 145), //Color Fondo Principal
+      backgroundColor: const Color.fromARGB(255, 1, 121, 145),
       body: SafeArea(
         child: Column(
           children: [
-            // Botón de cerrar sesión
+            // Botón cerrar sesión
             Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -36,13 +86,17 @@ class MenuScreen extends StatelessWidget {
               ),
             ),
 
-            // Logo personalizado
+            // Logo
             Container(
               width: 120,
               height: 120,
               decoration: BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
+                image: const DecorationImage(
+                  image: AssetImage('assets/icono/nutrileche.png'),
+                  fit: BoxFit.contain,
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.25),
@@ -50,37 +104,50 @@ class MenuScreen extends StatelessWidget {
                     offset: const Offset(0, 8),
                   ),
                 ],
-                image: const DecorationImage(
-                  image: AssetImage('assets/icono/nutrileche.png'),
-                  fit: BoxFit.contain,
-                ),
               ),
             ),
 
             const SizedBox(height: 14),
 
-            // Título principal
-            const Text(
-              'Nutri Leche',
-              style: TextStyle(
-                fontSize: 30,
+            // Nombre y Rol
+            Text(
+              usuario?.nombreCompleto ?? 'Usuario',
+              style: const TextStyle(
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
-                letterSpacing: -0.5,
               ),
             ),
-            const SizedBox(height: 4),
+
+            // Mostrar planta según el rol o área real
             Text(
-              'Ecuador - Portal de Empleados',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.white.withOpacity(0.9),
+              () {
+                if (usuario == null) return 'Rol: Empleado';
+
+                switch (usuario.username) {
+                  case 'admin':
+                    return 'Rol: Planta Administrativa';
+                  case 'recursos':
+                    return 'Rol: Planta Recursos Humanos';
+                  case 'bodega':
+                    return 'Rol: Planta Bodega';
+                  case 'produccion':
+                    return 'Rol: Planta Producción';
+                  case 'ventas':
+                    return 'Rol: Planta Ventas';
+                  default:
+                    return 'Rol: Empleado';
+                }
+              }(),
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.white70,
               ),
             ),
 
             const SizedBox(height: 20),
 
-            // Línea negra sombreada
+            // Línea sombreada
             Container(
               height: 4,
               width: screenWidth * 0.9,
@@ -100,7 +167,7 @@ class MenuScreen extends StatelessWidget {
 
             const SizedBox(height: 25),
 
-            // Recuadro central con los botones
+            // Contenedor botones
             Expanded(
               child: Center(
                 child: Container(
@@ -126,69 +193,17 @@ class MenuScreen extends StatelessWidget {
                     crossAxisSpacing: 22,
                     mainAxisSpacing: 24,
                     childAspectRatio: 2.8,
-                    shrinkWrap: true,
-                    children: [
-                      _buildMenuButton(
+                    children: menus.map((menu) {
+                      return _buildMenuButton(
                         context,
-                        'Eventos',
-                        'Calendario y actividades',
-                        Icons.event_available_rounded,
-                        const LinearGradient(
-                          colors: [
-                            Color.fromARGB(255, 0, 4, 255),
-                            Color(0xFF64B5F6)
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        '/eventos',
-                      ),
-                      _buildMenuButton(
-                        context,
-                        'Notificaciones',
-                        'Mensajes y alertas del sistema',
-                        Icons.notifications_rounded,
-                        const LinearGradient(
-                          colors: [
-                            Color.fromARGB(255, 255, 1, 1),
-                            Color(0xFF00ACC1)
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        '/notificaciones',
-                      ),
-                      _buildMenuButton(
-                        context,
-                        'Chat',
-                        'Comunicación interna',
-                        Icons.chat_rounded,
-                        const LinearGradient(
-                          colors: [
-                            Color.fromARGB(255, 0, 152, 8),
-                            Color(0xFF81C784)
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        '/chat',
-                      ),
-                      _buildMenuButton(
-                        context,
-                        'Recursos',
-                        'Documentos y políticas',
-                        Icons.folder_copy_rounded,
-                        const LinearGradient(
-                          colors: [
-                            Color.fromARGB(255, 140, 73, 255),
-                            Color(0xFF9575CD)
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        '/recursos',
-                      ),
-                    ],
+                        menu['titulo'],
+                        menu['subtitulo'],
+                        menu['icono'],
+                        menu['colores'][0],
+                        menu['colores'][1],
+                        menu['ruta'],
+                      );
+                    }).toList(),
                   ),
                 ),
               ),
@@ -201,23 +216,30 @@ class MenuScreen extends StatelessWidget {
     );
   }
 
+  // Botón del menú
   Widget _buildMenuButton(
     BuildContext context,
     String title,
     String subtitle,
     IconData icon,
-    LinearGradient gradient,
+    Color color1,
+    Color color2,
     String route,
   ) {
     return InkWell(
       onTap: () => Navigator.pushNamed(context, route),
+      borderRadius: BorderRadius.circular(18),
       child: Container(
         decoration: BoxDecoration(
-          gradient: gradient,
+          gradient: LinearGradient(
+            colors: [color1, color2],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: gradient.colors.first.withOpacity(0.4),
+              color: color1.withOpacity(0.4),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),

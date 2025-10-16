@@ -162,10 +162,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             if (success) {
                               _ocultarMensajeInmediato();
+                              final rol = authService.currentUser?.rol ?? 'empleado';
+                              debugPrint('✅ Sesión iniciada como: $rol');
                               Navigator.pushReplacementNamed(context, '/menu');
                             } else {
                               _mostrarMensaje(
-                                  'Usuario o contraseña incorrectos. Por favor, verifique sus credenciales e intente nuevamente.');
+                                  'Usuario o contraseña incorrectos. Verifique sus credenciales e intente nuevamente.');
                             }
                           },
                           style: ElevatedButton.styleFrom(

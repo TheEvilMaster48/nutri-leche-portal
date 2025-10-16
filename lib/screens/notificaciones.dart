@@ -19,9 +19,7 @@ class NotificacionesScreen extends StatelessWidget {
           if (notificaciones.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.done_all),
-              onPressed: () {
-                notificacionService.marcarTodasComoLeidas();
-              },
+              onPressed: () => notificacionService.marcarTodasComoLeidas(),
               tooltip: 'Marcar todas como leídas',
             ),
         ],
@@ -33,10 +31,8 @@ class NotificacionesScreen extends StatelessWidget {
                 children: [
                   Icon(Icons.notifications_off, size: 80, color: Colors.grey[400]),
                   const SizedBox(height: 16),
-                  Text(
-                    'No hay notificaciones',
-                    style: TextStyle(fontSize: 20, color: Colors.grey[600]),
-                  ),
+                  Text('No hay notificaciones',
+                      style: TextStyle(fontSize: 20, color: Colors.grey[600])),
                 ],
               ),
             )
@@ -56,15 +52,14 @@ class NotificacionesScreen extends StatelessWidget {
                         color: _getColorByType(notif.tipo).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(
-                        _getIconByType(notif.tipo),
-                        color: _getColorByType(notif.tipo),
-                      ),
+                      child: Icon(_getIconByType(notif.tipo),
+                          color: _getColorByType(notif.tipo)),
                     ),
                     title: Text(
                       notif.titulo,
                       style: TextStyle(
-                        fontWeight: notif.leida ? FontWeight.normal : FontWeight.bold,
+                        fontWeight:
+                            notif.leida ? FontWeight.normal : FontWeight.bold,
                       ),
                     ),
                     subtitle: Column(
@@ -72,11 +67,20 @@ class NotificacionesScreen extends StatelessWidget {
                       children: [
                         const SizedBox(height: 4),
                         Text(notif.mensaje),
-                        const SizedBox(height: 4),
-                        Text(
-                          notif.fecha,
-                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                        ),
+                        if (notif.categoria != null) ...[
+                          const SizedBox(height: 4),
+                          Text('Planta: ${notif.categoria}',
+                              style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+                        ],
+                        if (notif.creadoPor != null) ...[
+                          const SizedBox(height: 2),
+                          Text('Creado por: ${notif.creadoPor}',
+                              style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+                        ],
+                        const SizedBox(height: 2),
+                        Text(notif.fecha,
+                            style:
+                                TextStyle(fontSize: 12, color: Colors.grey[600])),
                       ],
                     ),
                     trailing: !notif.leida
@@ -89,9 +93,8 @@ class NotificacionesScreen extends StatelessWidget {
                             ),
                           )
                         : null,
-                    onTap: () {
-                      notificacionService.marcarComoLeida(notif.id);
-                    },
+                    onTap: () =>
+                        notificacionService.marcarComoLeida(notif.id),
                   ),
                 );
               },

@@ -308,17 +308,19 @@ class _RegistroScreenState extends State<RegistroScreen> {
                                   id: DateTime.now()
                                       .millisecondsSinceEpoch
                                       .toString(),
-                                  username: _usernameController.text,
-                                  password: _passwordController.text,
-                                  nombreCompleto: _nombreController.text,
-                                  correo: _correoController.text,
+                                  username: _usernameController.text.trim(),
+                                  password: _passwordController.text.trim(),
+                                  nombreCompleto: _nombreController.text.trim(),
+                                  correo: _correoController.text.trim(),
                                   codigoEmpleado:
-                                      _codigoEmpleadoController.text,
+                                      _codigoEmpleadoController.text.trim(),
                                   telefono:
-                                      '${paisSeleccionado.prefijo} ${_telefonoController.text}',
-                                  cargo: _cargoController.text,
-                                  planta: _plantaController.text,
+                                      '${paisSeleccionado.prefijo} ${_telefonoController.text.trim()}',
+                                  cargo: _cargoController.text.trim(),
+                                  planta: _plantaController.text.trim(),
                                   fechaRegistro: DateTime.now(),
+                                  rol:
+                                      'empleado', // Todos los registros nuevos son empleados
                                 );
 
                                 final authService = context.read<AuthService>();

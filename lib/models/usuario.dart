@@ -9,6 +9,7 @@ class Usuario {
   final String cargo;
   final String planta;
   final DateTime fechaRegistro;
+  final String rol; 
 
   Usuario({
     required this.id,
@@ -21,6 +22,7 @@ class Usuario {
     required this.cargo,
     required this.planta,
     required this.fechaRegistro,
+    this.rol = 'empleado', 
   });
 
   Map<String, dynamic> toJson() {
@@ -35,21 +37,24 @@ class Usuario {
       'cargo': cargo,
       'planta': planta,
       'fechaRegistro': fechaRegistro.toIso8601String(),
+      'rol': rol,
     };
   }
 
   factory Usuario.fromJson(Map<String, dynamic> json) {
     return Usuario(
-      id: json['id'],
-      username: json['username'],
-      password: json['password'],
-      nombreCompleto: json['nombreCompleto'],
-      correo: json['correo'],
-      codigoEmpleado: json['codigoEmpleado'],
-      telefono: json['telefono'],
-      cargo: json['cargo'],
-      planta: json['planta'],
-      fechaRegistro: DateTime.parse(json['fechaRegistro']),
+      id: json['id'] ?? '',
+      username: json['username'] ?? '',
+      password: json['password'] ?? '',
+      nombreCompleto: json['nombreCompleto'] ?? '',
+      correo: json['correo'] ?? '',
+      codigoEmpleado: json['codigoEmpleado'] ?? '',
+      telefono: json['telefono'] ?? '',
+      cargo: json['cargo'] ?? '',
+      planta: json['planta'] ?? '',
+      fechaRegistro: DateTime.tryParse(json['fechaRegistro'] ?? '') ??
+          DateTime.now(),
+      rol: json['rol'] ?? 'empleado',
     );
   }
 }
