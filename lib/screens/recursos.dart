@@ -53,7 +53,7 @@ class RecursosScreen extends StatelessWidget {
                 pw.SizedBox(height: 40),
                 pw.Text(
                   'Fecha de generación: ${DateTime.now().toString().substring(0, 10)}',
-                  style: pw.TextStyle(
+                  style: const pw.TextStyle(
                     fontSize: 10,
                     color: PdfColors.grey700,
                   ),

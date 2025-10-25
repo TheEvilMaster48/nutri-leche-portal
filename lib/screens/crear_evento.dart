@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 
@@ -22,13 +21,9 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
   final _tituloController = TextEditingController();
   final _descripcionController = TextEditingController();
   final _fechaController = TextEditingController();
-
-  File? _imagen;
   File? _archivo;
   String? _horaSeleccionada;
-  final ImagePicker _picker = ImagePicker();
 
-  // Lista de horas
   final List<String> _horasDisponibles = [
     "08H30", "09H00", "09H30", "10H00", "10H30", "11H00",
     "11H30", "12H00", "12H30", "13H00", "13H30", "14H00",
@@ -41,21 +36,7 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
     _fechaController.text = DateTime.now().toString().split(' ')[0];
   }
 
-  // Seleccionar imagen
-  Future<void> _seleccionarImagen() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (!mounted) return;
-    if (image != null) {
-      setState(() => _imagen = File(image.path));
-      NotificationBanner.show(
-        context,
-        'Imagen seleccionada correctamente',
-        NotificationType.success,
-      );
-    }
-  }
-
-  // Seleccionar archivo
+  // Seleccionar archivo PDF o DOC
   Future<void> _seleccionarArchivo() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -66,7 +47,7 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
       setState(() => _archivo = File(result.files.single.path!));
       NotificationBanner.show(
         context,
-        'Archivo seleccionado correctamente',
+        '📎 Archivo seleccionado correctamente',
         NotificationType.success,
       );
     }
@@ -97,7 +78,7 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
         _horaSeleccionada == null) {
       NotificationBanner.show(
         context,
-        'Por favor completa todos los campos requeridos',
+        '⚠️ Por favor completa todos los campos requeridos.',
         NotificationType.error,
       );
       return;
@@ -117,13 +98,11 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
       return;
     }
 
-    // Lista de roles autorizados
     const rolesPermitidos = ['admin', 'recursos', 'bodega', 'produccion', 'ventas'];
-
     if (!rolesPermitidos.contains(usuarioActual.rol)) {
       NotificationBanner.show(
         context,
-        'Acceso denegado. No tienes permisos para crear, editar o eliminar eventos.',
+        'Acceso denegado. No tienes permisos para crear eventos.',
         NotificationType.error,
       );
       return;
@@ -134,18 +113,20 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
       titulo: _tituloController.text.trim(),
       descripcion: _descripcionController.text.trim(),
       fecha: "${_fechaController.text} - $_horaSeleccionada",
+      // ✅ Incluimos el nombre y planta del usuario
       creadoPor:
-          '${usuarioActual.nombreCompleto} (#${usuarioActual.codigoEmpleado})',
-      imagenPath: _imagen?.path,
+          '${usuarioActual.nombreCompleto} - ${usuarioActual.planta}',
+      imagenPath: null, // imagen eliminada
       archivoPath: _archivo?.path,
     );
 
     try {
       await eventoService.crearEvento(nuevoEvento, usuarioActual);
+      await eventoService.recargarEventos(usuario: usuarioActual);
 
       notificacionService.agregarNotificacion(
         'Nuevo evento creado',
-        'Se ha creado el evento "${nuevoEvento.titulo}" por ${usuarioActual.nombreCompleto} para la fecha ${nuevoEvento.fecha}',
+        '📅 Se ha creado el evento "${nuevoEvento.titulo}" por ${usuarioActual.nombreCompleto} (${usuarioActual.planta}) para la fecha ${nuevoEvento.fecha}',
         'evento',
       );
 
@@ -153,7 +134,7 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
 
       NotificationBanner.show(
         context,
-        'Evento creado exitosamente',
+        '✅ Evento creado exitosamente',
         NotificationType.success,
       );
 
@@ -162,7 +143,7 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
       if (!mounted) return;
       NotificationBanner.show(
         context,
-        'Error: ${e.toString()}',
+        'Error al guardar el evento: ${e.toString()}',
         NotificationType.error,
       );
     }
@@ -177,8 +158,7 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title:
-            const Text('Crear Evento', style: TextStyle(color: Colors.white)),
+        title: const Text('Crear Evento', style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF3B82F6),
         iconTheme: const IconThemeData(color: Colors.white),
         leading: IconButton(
@@ -241,19 +221,7 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
                         setState(() => _horaSeleccionada = valor),
                   ),
                   const SizedBox(height: 24),
-                  OutlinedButton.icon(
-                    onPressed: _seleccionarImagen,
-                    icon: const Icon(Icons.image),
-                    label: Text(_imagen == null
-                        ? 'Añadir Imagen'
-                        : 'Imagen seleccionada'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.all(16),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
+                  // 🔹 Eliminamos botón de imagen
                   OutlinedButton.icon(
                     onPressed: _seleccionarArchivo,
                     icon: const Icon(Icons.attach_file),
@@ -283,7 +251,7 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
             )
           : const Center(
               child: Text(
-                'Acceso denegado. Solo roles autorizados pueden crear eventos.',
+                'Acceso denegado.\nSolo roles autorizados pueden crear eventos.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 18, color: Colors.red),
               ),

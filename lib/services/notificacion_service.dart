@@ -1,112 +1,75 @@
 import 'package:flutter/foundation.dart';
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/notificacion.dart';
+import 'dart:convert';
+import '../models/notification_item.dart';
 
+/// Servicio local de notificaciones (sin Firebase)
 class NotificacionService extends ChangeNotifier {
-  List<Notificacion> _notificaciones = [];
+  List<NotificationItem> _notificaciones = [];
 
-  List<Notificacion> get notificaciones => _notificaciones;
-
-  int get notificacionesNoLeidas =>
-      _notificaciones.where((n) => !n.leida).length;
+  List<NotificationItem> get notificaciones => _notificaciones;
 
   NotificacionService() {
     _cargarNotificaciones();
   }
 
+  /// 🔹 Cargar notificaciones desde almacenamiento local
   Future<void> _cargarNotificaciones() async {
     final prefs = await SharedPreferences.getInstance();
-    final String? notificacionesJson = prefs.getString('notificaciones');
-
-    if (notificacionesJson != null) {
-      final List<dynamic> decoded = json.decode(notificacionesJson);
-      _notificaciones = decoded.map((e) => Notificacion.fromJson(e)).toList();
-      notifyListeners();
+    final data = prefs.getString('notificaciones');
+    if (data != null) {
+      final decoded = jsonDecode(data) as List;
+      _notificaciones =
+          decoded.map((n) => NotificationItem.fromJson(n)).toList();
+    } else {
+      _notificaciones = [];
     }
+    notifyListeners();
   }
 
+  /// 🔹 Guardar notificaciones en almacenamiento local
   Future<void> _guardarNotificaciones() async {
     final prefs = await SharedPreferences.getInstance();
-    final String encoded =
-        json.encode(_notificaciones.map((e) => e.toJson()).toList());
-    await prefs.setString('notificaciones', encoded);
+    await prefs.setString(
+      'notificaciones',
+      jsonEncode(_notificaciones.map((n) => n.toJson()).toList()),
+    );
   }
 
-  // 🔹 Versión antigua (compatibilidad total)
-  void agregarNotificacion(String titulo, String mensaje, String tipo) {
-    _agregarInterno(titulo, mensaje, tipo, null, null);
-  }
-
-  // 🔹 Nueva versión opcional (sin romper nada)
-  void agregarNotificacionAvanzada({
-    required String titulo,
-    required String mensaje,
-    required String tipo,
-    String? categoria,
-    String? creadoPor,
-  }) {
-    _agregarInterno(titulo, mensaje, tipo, categoria, creadoPor);
-  }
-
-  // 🔹 Lógica común
-  void _agregarInterno(String titulo, String mensaje, String tipo,
-      String? categoria, String? creadoPor) {
-    final notificacion = Notificacion(
+  /// 🔹 Agregar nueva notificación
+  Future<void> agregarNotificacion(
+      String titulo, String detalle, String tipo) async {
+    final nueva = NotificationItem(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       titulo: titulo,
-      mensaje: mensaje,
-      fecha: DateTime.now().toString().substring(0, 16),
+      detalle: detalle,
       tipo: tipo,
-      leida: false,
-      categoria: categoria,
-      creadoPor: creadoPor,
+      fecha: DateTime.now(),
     );
 
-    _notificaciones.insert(0, notificacion);
-    _guardarNotificaciones();
+    _notificaciones.insert(0, nueva);
+    await _guardarNotificaciones();
     notifyListeners();
   }
 
-  void marcarComoLeida(String id) {
-    final index = _notificaciones.indexWhere((n) => n.id == id);
-    if (index != -1) {
-      final n = _notificaciones[index];
-      _notificaciones[index] = Notificacion(
-        id: n.id,
-        titulo: n.titulo,
-        mensaje: n.mensaje,
-        fecha: n.fecha,
-        tipo: n.tipo,
-        leida: true,
-        categoria: n.categoria,
-        creadoPor: n.creadoPor,
-      );
-      _guardarNotificaciones();
-      notifyListeners();
-    }
+  /// 🔹 Obtener todas las notificaciones
+  Future<List<NotificationItem>> obtenerNotificaciones() async {
+    await _cargarNotificaciones();
+    return _notificaciones;
   }
 
-  void marcarTodasComoLeidas() {
-    _notificaciones = _notificaciones
-        .map((n) => Notificacion(
-              id: n.id,
-              titulo: n.titulo,
-              mensaje: n.mensaje,
-              fecha: n.fecha,
-              tipo: n.tipo,
-              leida: true,
-              categoria: n.categoria,
-              creadoPor: n.creadoPor,
-            ))
-        .toList();
-    _guardarNotificaciones();
-    notifyListeners();
-  }
-
-  void eliminarNotificacion(String id) {
+  /// 🔹 Eliminar una notificación específica
+  Future<void> eliminarNotificacion(String id) async {
     _notificaciones.removeWhere((n) => n.id == id);
-    _guardarNotificaciones();
+    await _guardarNotificaciones();
+    notifyListeners();
+  }
+
+  /// 🔹 Limpiar todas las notificaciones
+  Future<void> limpiarNotificaciones() async {
+    _notificaciones.clear();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('notificaciones');
     notifyListeners();
   }
 }

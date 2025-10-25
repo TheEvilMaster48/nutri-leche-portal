@@ -9,35 +9,33 @@ class EventoService extends ChangeNotifier {
 
   List<Evento> get eventos => _eventos;
 
-  EventoService() {
-    _loadEventosPorPlanta('todos');
-  }
+  // ❌ Eliminamos el constructor que cargaba “todos” al inicio
+  EventoService();
 
-  // Devuelve el nombre correcto del archivo según la planta
+  // 🔹 Determina el nombre del archivo según la planta
   String _nombreArchivoPorPlanta(String planta) {
     final normalizado = planta.toLowerCase().trim();
     if (normalizado.contains('administrativa')) return 'eventos_admin';
     if (normalizado.contains('recursos')) return 'eventos_recursos';
     if (normalizado.contains('bodega')) return 'eventos_bodega';
     if (normalizado.contains('produccion') ||
-        normalizado.contains('producción')) {
-      return 'eventos_produccion';
-    }
+        normalizado.contains('producción')) return 'eventos_produccion';
     if (normalizado.contains('ventas')) return 'eventos_ventas';
     return 'eventos_todos';
   }
 
-  // Cargar eventos según la planta
+  // 🔹 Cargar eventos desde SharedPreferences
   Future<void> _loadEventosPorPlanta(String planta) async {
     final prefs = await SharedPreferences.getInstance();
     final key = _nombreArchivoPorPlanta(planta);
-    final eventosJson = prefs.getString(key);
+    final data = prefs.getString(key);
 
-    if (eventosJson != null && eventosJson.isNotEmpty) {
+    if (data != null && data.isNotEmpty) {
       try {
-        final List decoded = json.decode(eventosJson);
+        final List decoded = jsonDecode(data);
         _eventos = decoded.map((e) => Evento.fromJson(e)).toList();
       } catch (e) {
+        debugPrint('⚠️ Error al decodificar eventos de $key: $e');
         _eventos = [];
       }
     } else {
@@ -46,16 +44,16 @@ class EventoService extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Guardar eventos por planta
+  // 🔹 Guardar eventos en SharedPreferences
   Future<void> _saveEventosPorPlanta(String planta) async {
     final prefs = await SharedPreferences.getInstance();
     final key = _nombreArchivoPorPlanta(planta);
-    final data = json.encode(_eventos.map((e) => e.toJson()).toList());
+    final data = jsonEncode(_eventos.map((e) => e.toJson()).toList());
     await prefs.setString(key, data);
     debugPrint('💾 Guardado en $key (${_eventos.length} eventos)');
   }
 
-  // Roles con acceso total
+  // 🔹 Roles con acceso total (pueden crear/editar/eliminar)
   bool _tieneAccesoTotal(Usuario usuario) {
     const rolesPermitidos = [
       'admin',
@@ -67,13 +65,13 @@ class EventoService extends ChangeNotifier {
     return rolesPermitidos.contains(usuario.rol);
   }
 
-  // CREAR EVENTO
+  // 🟢 CREAR EVENTO
   Future<void> crearEvento(Evento nuevo, Usuario usuarioActual) async {
     if (!_tieneAccesoTotal(usuarioActual)) {
       throw Exception('Solo los roles autorizados pueden crear eventos');
     }
 
-    // Cargar eventos de la planta correcta
+    // Cargar eventos existentes de la planta
     await _loadEventosPorPlanta(usuarioActual.planta);
 
     final eventoConPlanta = Evento(
@@ -81,18 +79,18 @@ class EventoService extends ChangeNotifier {
       titulo: nuevo.titulo,
       descripcion: nuevo.descripcion,
       fecha: nuevo.fecha,
-      creadoPor: '${usuarioActual.nombreCompleto} (${usuarioActual.planta})',
+      creadoPor:
+          '${usuarioActual.nombreCompleto} - ${usuarioActual.planta}',
       imagenPath: nuevo.imagenPath,
       archivoPath: nuevo.archivoPath,
     );
 
     _eventos.add(eventoConPlanta);
     await _saveEventosPorPlanta(usuarioActual.planta);
-    await recargarEventos(usuario: usuarioActual);
     notifyListeners();
   }
 
-  // EDITAR EVENTO
+  // 🟡 EDITAR EVENTO
   Future<void> editarEvento(
       String id, Evento actualizado, Usuario usuarioActual) async {
     if (!_tieneAccesoTotal(usuarioActual)) {
@@ -100,17 +98,16 @@ class EventoService extends ChangeNotifier {
     }
 
     await _loadEventosPorPlanta(usuarioActual.planta);
-
     final index = _eventos.indexWhere((e) => e.id == id);
+
     if (index != -1) {
       _eventos[index] = actualizado;
       await _saveEventosPorPlanta(usuarioActual.planta);
-      await recargarEventos(usuario: usuarioActual);
       notifyListeners();
     }
   }
 
-  // ELIMINAR EVENTO
+  // 🔴 ELIMINAR EVENTO
   Future<void> eliminarEvento(String id, Usuario usuarioActual) async {
     if (!_tieneAccesoTotal(usuarioActual)) {
       throw Exception('Solo los roles autorizados pueden eliminar eventos');
@@ -119,22 +116,44 @@ class EventoService extends ChangeNotifier {
     await _loadEventosPorPlanta(usuarioActual.planta);
     _eventos.removeWhere((e) => e.id == id);
     await _saveEventosPorPlanta(usuarioActual.planta);
-    await recargarEventos(usuario: usuarioActual);
     notifyListeners();
   }
 
-  // RECARGAR EVENTOS
+  // 🔁 RECARGAR EVENTOS según el usuario actual
   Future<void> recargarEventos({Usuario? usuario}) async {
-    if (usuario == null) {
-      await _loadEventosPorPlanta('todos');
-    } else if (_tieneAccesoTotal(usuario)) {
+    if (usuario == null) return;
+
+    if (_tieneAccesoTotal(usuario)) {
       await _loadEventosPorPlanta(usuario.planta);
     } else {
-      await _loadEventosPorPlanta('todos');
+      final prefs = await SharedPreferences.getInstance();
+      List<Evento> todos = [];
+      final claves = [
+        'eventos_admin',
+        'eventos_recursos',
+        'eventos_bodega',
+        'eventos_produccion',
+        'eventos_ventas'
+      ];
+
+      for (final key in claves) {
+        final data = prefs.getString(key);
+        if (data != null && data.isNotEmpty) {
+          try {
+            final List decoded = jsonDecode(data);
+            todos.addAll(decoded.map((e) => Evento.fromJson(e)).toList());
+          } catch (e) {
+            debugPrint('⚠️ Error leyendo $key: $e');
+          }
+        }
+      }
+
+      _eventos = todos;
+      notifyListeners();
     }
   }
 
-  // OBTENER TODOS LOS EVENTOS (VISUALIZACIÓN GLOBAL)
+  // 📦 OBTENER TODOS LOS EVENTOS (solo lectura global)
   Future<List<Evento>> obtenerTodosLosEventos() async {
     final prefs = await SharedPreferences.getInstance();
     List<Evento> todos = [];
@@ -151,7 +170,7 @@ class EventoService extends ChangeNotifier {
       final data = prefs.getString(key);
       if (data != null && data.isNotEmpty) {
         try {
-          final List decoded = json.decode(data);
+          final List decoded = jsonDecode(data);
           todos.addAll(decoded.map((e) => Evento.fromJson(e)).toList());
         } catch (e) {
           debugPrint('⚠️ Error cargando $key: $e');

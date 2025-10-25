@@ -32,28 +32,10 @@ class _EventosScreenState extends State<EventosScreen> {
 
     if (usuario == null) return;
 
-    if (_tieneAccesoTotal(usuario)) {
-      await eventoService.recargarEventos(usuario: usuario);
-      setState(() {
-        _eventosTotales = eventoService.eventos;
-      });
-    } else {
-      final todos = await eventoService.obtenerTodosLosEventos();
-      setState(() {
-        _eventosTotales = todos;
-      });
-    }
-  }
-
-  bool _tieneAccesoTotal(Usuario usuario) {
-    const rolesPermitidos = [
-      'admin',
-      'recursos',
-      'bodega',
-      'produccion',
-      'ventas'
-    ];
-    return rolesPermitidos.contains(usuario.rol);
+    await eventoService.recargarEventos(usuario: usuario);
+    setState(() {
+      _eventosTotales = eventoService.eventos;
+    });
   }
 
   @override
@@ -73,10 +55,7 @@ class _EventosScreenState extends State<EventosScreen> {
       );
     }
 
-    final bool esAdmin = _tieneAccesoTotal(usuario);
-    final String plantaUsuario = usuario.planta;
-
-    // Categorías fijas
+    // 🏭 Definir categorías fijas
     final categorias = [
       'Planta Administrativa',
       'Planta de Recursos Humanos',
@@ -85,12 +64,11 @@ class _EventosScreenState extends State<EventosScreen> {
       'Planta Ventas',
     ];
 
-    // Obtener fecha y hora actual
+    // 📅 Separar eventos activos y pasados
     final ahora = DateTime.now();
     List<Evento> eventosActivos = [];
     List<Evento> eventosPasados = [];
 
-    // Clasificar eventos activos / pasados
     for (var e in _eventosTotales) {
       try {
         final partes = e.fecha.split(' - ');
@@ -110,7 +88,7 @@ class _EventosScreenState extends State<EventosScreen> {
       }
     }
 
-    // ✅ Agrupar eventos por planta según texto del campo creadoPor
+    // 🔹 Agrupar eventos por planta (usando el campo creadoPor)
     Map<String, List<Evento>> agruparPorPlanta(List<Evento> lista) {
       Map<String, List<Evento>> agrupado = {
         for (var c in categorias) c: [],
@@ -142,39 +120,32 @@ class _EventosScreenState extends State<EventosScreen> {
     final activosPorCategoria = agruparPorPlanta(eventosActivos);
     final pasadosPorCategoria = agruparPorPlanta(eventosPasados);
 
-    // ✅ Filtrar eventos según la planta del usuario
-    Map<String, List<Evento>> mostrarMapa;
+    // 👥 Determinar el mapa de eventos a mostrar
+    Map<String, List<Evento>> mostrarMapa = {};
 
-    if (esAdmin) {
+    if (usuario.rol == 'empleado') {
+      mostrarMapa =
+          mostrarEventosPasados ? pasadosPorCategoria : activosPorCategoria;
+    } else {
       String categoriaPlanta = 'Planta Administrativa';
-      if (plantaUsuario.toLowerCase().contains('recursos')) {
+      if (usuario.planta.toLowerCase().contains('recursos')) {
         categoriaPlanta = 'Planta de Recursos Humanos';
-      } else if (plantaUsuario.toLowerCase().contains('bodega')) {
+      } else if (usuario.planta.toLowerCase().contains('bodega')) {
         categoriaPlanta = 'Planta Bodega';
-      } else if (plantaUsuario.toLowerCase().contains('produccion') ||
-          plantaUsuario.toLowerCase().contains('producción')) {
+      } else if (usuario.planta.toLowerCase().contains('produccion') ||
+          usuario.planta.toLowerCase().contains('producción')) {
         categoriaPlanta = 'Planta Producción';
-      } else if (plantaUsuario.toLowerCase().contains('ventas')) {
+      } else if (usuario.planta.toLowerCase().contains('ventas')) {
         categoriaPlanta = 'Planta Ventas';
       }
 
       mostrarMapa = mostrarEventosPasados
-          ? {
-              categoriaPlanta: pasadosPorCategoria[categoriaPlanta] ?? [],
-            }
-          : {
-              categoriaPlanta: activosPorCategoria[categoriaPlanta] ?? [],
-            };
-    } else {
-      // Empleados ven todos los eventos activos combinados
-      mostrarMapa = mostrarEventosPasados
-          ? pasadosPorCategoria
-          : activosPorCategoria;
+          ? {categoriaPlanta: pasadosPorCategoria[categoriaPlanta] ?? []}
+          : {categoriaPlanta: activosPorCategoria[categoriaPlanta] ?? []};
     }
 
-    final tituloSeccion = esAdmin
-        ? (mostrarEventosPasados ? 'Eventos Pasados' : 'Eventos Programados')
-        : 'Eventos Programados';
+    final tituloSeccion =
+        mostrarEventosPasados ? 'Eventos Pasados' : 'Eventos Programados';
 
     return Scaffold(
       appBar: AppBar(
@@ -182,21 +153,20 @@ class _EventosScreenState extends State<EventosScreen> {
         backgroundColor: const Color(0xFF3B82F6),
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
-          if (esAdmin)
-            IconButton(
-              icon: Icon(
-                mostrarEventosPasados
-                    ? Icons.event_available_rounded
-                    : Icons.history_rounded,
-              ),
-              tooltip: mostrarEventosPasados
-                  ? 'Ver próximos eventos'
-                  : 'Ver eventos pasados',
-              onPressed: () {
-                setState(() => mostrarEventosPasados = !mostrarEventosPasados);
-              },
+          IconButton(
+            icon: Icon(
+              mostrarEventosPasados
+                  ? Icons.event_available_rounded
+                  : Icons.history_rounded,
             ),
-          if (esAdmin)
+            tooltip: mostrarEventosPasados
+                ? 'Ver próximos eventos'
+                : 'Ver eventos pasados',
+            onPressed: () {
+              setState(() => mostrarEventosPasados = !mostrarEventosPasados);
+            },
+          ),
+          if (usuario.rol != 'empleado')
             IconButton(
               icon: const Icon(Icons.add),
               tooltip: 'Nuevo evento',
@@ -281,10 +251,8 @@ class _EventosScreenState extends State<EventosScreen> {
                         : eventos
                             .map((evento) => _buildEventoCard(
                                   evento,
-                                  esAdmin,
-                                  mostrarEventosPasados,
-                                  eventoService,
                                   usuario,
+                                  eventoService,
                                 ))
                             .toList(),
                   ),
@@ -294,15 +262,23 @@ class _EventosScreenState extends State<EventosScreen> {
     );
   }
 
-  Widget _buildEventoCard(Evento evento, bool esAdmin, bool eventoPasadoVisible,
-      EventoService eventoService, Usuario usuarioActual) {
+  // 🧩 Tarjeta de evento individual (con edición y eliminación)
+  Widget _buildEventoCard(
+      Evento evento, Usuario usuarioActual, EventoService eventoService) {
+    final rolesPermitidos = [
+      'admin',
+      'recursos',
+      'bodega',
+      'produccion',
+      'ventas'
+    ];
+    final bool tienePermiso = rolesPermitidos.contains(usuarioActual.rol);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Container(
         decoration: BoxDecoration(
-          color: eventoPasadoVisible
-              ? const Color(0xFFEDEDED)
-              : const Color(0xFFF3F4F6),
+          color: const Color(0xFFF3F4F6),
           borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(
@@ -313,31 +289,14 @@ class _EventosScreenState extends State<EventosScreen> {
           ],
         ),
         child: ListTile(
-          leading: Container(
-            width: 45,
-            height: 45,
-            decoration: BoxDecoration(
-              color: eventoPasadoVisible
-                  ? Colors.grey.withOpacity(0.25)
-                  : const Color(0xFF3B82F6).withOpacity(0.15),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              eventoPasadoVisible ? Icons.event_busy : Icons.event_note,
-              color:
-                  eventoPasadoVisible ? Colors.grey : const Color(0xFF3B82F6),
-            ),
-          ),
+          leading:
+              const Icon(Icons.event_note, color: Color(0xFF3B82F6), size: 32),
           title: Text(
             evento.titulo,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: eventoPasadoVisible ? Colors.grey[700] : Colors.black,
-              decoration: eventoPasadoVisible
-                  ? TextDecoration.lineThrough
-                  : TextDecoration.none,
-            ),
+            style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Colors.black),
           ),
           subtitle: Padding(
             padding: const EdgeInsets.only(top: 4),
@@ -355,70 +314,68 @@ class _EventosScreenState extends State<EventosScreen> {
                   ],
                 ),
                 const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.person,
-                        size: 16, color: Colors.blueAccent),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        'Creado por: ${evento.creadoPor} (#${evento.id})',
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.black54,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ),
-                  ],
+                Text(
+                  'Creado por: ${evento.creadoPor}',
+                  style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.black54,
+                      fontStyle: FontStyle.italic),
                 ),
               ],
             ),
           ),
-          trailing: esAdmin
-              ? IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  tooltip: 'Eliminar evento',
-                  onPressed: () async {
-                    final confirmar = await showDialog<bool>(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        title: const Text('Confirmar eliminación'),
-                        content: Text(
-                            '¿Seguro que deseas eliminar el evento "${evento.titulo}" de forma permanente?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(ctx, false),
-                            child: const Text('Cancelar'),
-                          ),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red),
-                            onPressed: () => Navigator.pop(ctx, true),
-                            child: const Text('Eliminar',
-                                style: TextStyle(color: Colors.white)),
-                          ),
-                        ],
-                      ),
-                    );
-
-                    if (confirmar == true) {
-                      await eventoService.eliminarEvento(
-                          evento.id, usuarioActual);
-                      await _cargarEventosIniciales();
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content:
-                                Text('Evento "${evento.titulo}" eliminado'),
-                            backgroundColor: Colors.redAccent,
-                            duration: const Duration(seconds: 2),
+          trailing: tienePermiso
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.blue),
+                      tooltip: 'Editar evento',
+                      onPressed: () async {
+                        final actualizado = await Navigator.pushNamed(
+                          context,
+                          '/editar_evento',
+                          arguments: evento,
+                        );
+                        if (actualizado == true) {
+                          await _cargarEventosIniciales();
+                        }
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      tooltip: 'Eliminar evento',
+                      onPressed: () async {
+                        final confirmar = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('Confirmar eliminación'),
+                            content: Text(
+                                '¿Seguro que deseas eliminar el evento "${evento.titulo}"?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, false),
+                                child: const Text('Cancelar'),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red),
+                                onPressed: () => Navigator.pop(ctx, true),
+                                child: const Text('Eliminar',
+                                    style: TextStyle(color: Colors.white)),
+                              ),
+                            ],
                           ),
                         );
-                      }
-                    }
-                  },
+
+                        if (confirmar == true) {
+                          await eventoService.eliminarEvento(
+                              evento.id, usuarioActual);
+                          await _cargarEventosIniciales();
+                        }
+                      },
+                    ),
+                  ],
                 )
               : null,
         ),
@@ -426,7 +383,7 @@ class _EventosScreenState extends State<EventosScreen> {
     );
   }
 
-  // Colores por planta
+  // 🎨 Colores por planta
   Color _colorPorCategoria(String categoria) {
     switch (categoria) {
       case 'Planta Administrativa':

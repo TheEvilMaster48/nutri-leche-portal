@@ -4,8 +4,8 @@ class Evento {
   final String descripcion;
   final String fecha;
   final String creadoPor;
-  final String? imagenPath;   // ✅ Nuevo campo opcional
-  final String? archivoPath;  // ✅ Nuevo campo opcional
+  final String? imagenPath;   
+  final String? archivoPath;  
 
   Evento({
     required this.id,
