@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:nutri_leche/screens/cumpleanios_screen.dart';
 import 'package:provider/provider.dart';
 
-// Seervice
+// SERVICES
 import 'core/locale_provider.dart';
 import 'services/auth_service.dart';
 import 'services/evento_service.dart';
@@ -12,7 +11,7 @@ import 'services/usuario_service.dart';
 import 'services/global_notifier.dart';
 import 'services/language_service.dart';
 
-//  Screens
+// SCREENS
 import 'screens/login.dart' as login_screen;
 import 'screens/registro.dart';
 import 'screens/menu.dart';
@@ -25,9 +24,10 @@ import 'screens/perfil.dart';
 import 'screens/reconocimientos_screen.dart';
 import 'screens/beneficios_screen.dart';
 import 'screens/celebracion_screen.dart';
-import 'screens/calendario_evento_screen.dart';
 import 'screens/agenda_screen.dart';
 import 'screens/buzon_sugerencias_screen.dart';
+import 'screens/cumpleanios_screen.dart';
+import 'screens/calendario_evento_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -69,7 +69,7 @@ class MyApp extends StatelessWidget {
           ],
           locale: const Locale('es', 'ES'),
           theme: ThemeData(
-            primarySwatch: Colors.blue,
+            primarySwatch: Colors.teal,
             useMaterial3: true,
           ),
           initialRoute: '/',
@@ -86,10 +86,10 @@ class MyApp extends StatelessWidget {
             '/reconocimientos': (context) => const ReconocimientosScreen(),
             '/beneficios': (context) => const BeneficiosScreen(),
             '/celebraciones': (context) => const CelebracionesScreen(),
-            '/calendario': (context) => const CalendarioEventosScreen(),
-            '/cumpleanios': (context) => const CumpleaniosScreen(),
             '/agenda': (context) => const AgendaScreen(),
             '/buzon': (context) => const BuzonSugerenciasScreen(),
+            '/cumpleanios': (context) => const CumpleaniosScreen(),
+            '/calendario_eventos': (context) => const CalendarioEventosScreen(),
           },
         );
       },

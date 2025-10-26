@@ -12,7 +12,7 @@ class CelebracionesScreen extends StatelessWidget {
     final auth = context.watch<AuthService>();
     final usuario = auth.currentUser;
 
-    // 🔹 Roles con acceso total
+    // Roles con acceso total
     final rolesAccesoTotal = [
       'admin',
       'recursos',
@@ -23,7 +23,6 @@ class CelebracionesScreen extends StatelessWidget {
 
     final bool tieneAccesoTotal =
         rolesAccesoTotal.contains(usuario?.rol.toLowerCase() ?? '');
-    final bool esEmpleado = usuario?.rol.toLowerCase() == 'empleado';
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -61,9 +60,7 @@ class CelebracionesScreen extends StatelessWidget {
             ),
             const SizedBox(height: 40),
 
-
-
-            // 🎂 Registrar cumpleaños
+            // Registrar cumpleaños
             if (tieneAccesoTotal)
               _buildMenuButton(
                 context,
@@ -81,16 +78,14 @@ class CelebracionesScreen extends StatelessWidget {
                 },
               ),
 
-
-
-            // 📅 Ver calendario de cumpleaños
+            // Calendario de Cumpleaños y Eventos
             _buildMenuButton(
               context,
-              icon: Icons.calendar_month_rounded,
-              color: Colors.teal,
-              title: '📅 Ver Calendario de Cumpleaños',
+              icon: Icons.event_note,
+              color: Colors.blue.shade600,
+              title: '📅 Ver Calendario de Eventos',
               subtitle:
-                  'Consulta las fechas importantes de tus compañeros de planta.',
+                  'Consulta los cumpleaños y actividades programadas en tu planta.',
               onTap: () {
                 Navigator.push(
                   context,
@@ -102,16 +97,16 @@ class CelebracionesScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 30),
-            Divider(color: Colors.grey.shade300, thickness: 1.2),
-            const SizedBox(height: 10),
-            _buildLeyenda(),
+            const Divider(thickness: 1.2),
+            const SizedBox(height: 15),
+            _buildMiniLeyenda(),
           ],
         ),
       ),
     );
   }
 
-  // 🔹 Botón de menú estilizado
+  //  Botón de Menú 
   Widget _buildMenuButton(
     BuildContext context, {
     required IconData icon,
@@ -158,51 +153,20 @@ class CelebracionesScreen extends StatelessWidget {
     );
   }
 
-  //  Colores por Planta
-  Widget _buildLeyenda() {
-    final leyenda = [
-      {'color': Colors.blue.shade600, 'texto': 'Planta Administrativa'},
-      {'color': Colors.purple.shade500, 'texto': 'Planta de Recursos Humanos'},
-      {'color': Colors.orange.shade600, 'texto': 'Planta de Bodega'},
-      {'color': Colors.green.shade600, 'texto': 'Planta de Producción'},
-      {'color': Colors.red.shade500, 'texto': 'Planta de Ventas'},
-      {'color': Colors.pinkAccent, 'texto': 'Cumpleaños 🎂'},
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  // LEYENDA ICONOS
+  Widget _buildMiniLeyenda() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text(
-          '📘 Leyenda de Colores',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 12,
-          runSpacing: 8,
-          children: leyenda
-              .map(
-                (e) => Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 16,
-                      height: 16,
-                      decoration: BoxDecoration(
-                        color: e['color'] as Color,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(e['texto'] as String),
-                  ],
-                ),
-              )
-              .toList(),
-        ),
+        const Icon(Icons.event_note, color: Colors.blue, size: 20),
+        const SizedBox(width: 6),
+        const Text('Eventos',
+            style: TextStyle(fontWeight: FontWeight.w500, color: Colors.black87)),
+        const SizedBox(width: 20),
+        const Icon(Icons.cake, color: Colors.pinkAccent, size: 20),
+        const SizedBox(width: 6),
+        const Text('Cumpleaños',
+            style: TextStyle(fontWeight: FontWeight.w500, color: Colors.black87)),
       ],
     );
   }
