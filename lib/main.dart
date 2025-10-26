@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:nutri_leche/screens/sugerencia_screen.dart';
 import 'package:provider/provider.dart';
 
 // SERVICES
@@ -25,7 +26,6 @@ import 'screens/reconocimientos_screen.dart';
 import 'screens/beneficios_screen.dart';
 import 'screens/celebracion_screen.dart';
 import 'screens/agenda_screen.dart';
-import 'screens/buzon_sugerencias_screen.dart';
 import 'screens/cumpleanios_screen.dart';
 import 'screens/calendario_evento_screen.dart';
 
@@ -87,7 +87,7 @@ class MyApp extends StatelessWidget {
             '/beneficios': (context) => const BeneficiosScreen(),
             '/celebraciones': (context) => const CelebracionesScreen(),
             '/agenda': (context) => const AgendaScreen(),
-            '/buzon': (context) => const BuzonSugerenciasScreen(),
+            '/buzon': (context) => const SugerenciaScreen(),
             '/cumpleanios': (context) => const CumpleaniosScreen(),
             '/calendario_eventos': (context) => const CalendarioEventosScreen(),
           },

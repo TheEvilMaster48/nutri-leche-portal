@@ -1,57 +1,63 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/sugerencia.dart';
 
 class SugerenciaService {
-  static const _key = 'sugerencias';
+  bool get isWeb => kIsWeb;
 
-  Future<List<Sugerencia>> listar() async {
-    final prefs = await SharedPreferences.getInstance();
-    final data = prefs.getString(_key);
-    if (data == null) return [];
-    final lista = jsonDecode(data) as List;
-    return lista.map((e) => Sugerencia.fromJson(e)).toList();
+  Future<File> _getLocalFile() async {
+    final dir = await getApplicationDocumentsDirectory();
+    return File('${dir.path}/sugerencias.json');
   }
 
-  Future<void> guardar(List<Sugerencia> sugerencias) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _key,
-      jsonEncode(sugerencias.map((e) => e.toJson()).toList()),
-    );
-  }
-
-  Future<void> agregar(Sugerencia nueva) async {
-    final lista = await listar();
-    lista.add(nueva);
-    await guardar(lista);
-  }
-
-  Future<void> actualizarEstado(int id, String nuevoEstado) async {
-    final lista = await listar();
-    final index = lista.indexWhere((s) => s.id == id);
-    if (index != -1) {
-      lista[index] = Sugerencia(
-        id: lista[index].id,
-        titulo: lista[index].titulo,
-        mensaje: lista[index].mensaje,
-        autor: lista[index].autor,
-        anonimo: lista[index].anonimo,
-        fecha: lista[index].fecha,
-        estado: nuevoEstado,
-      );
-      await guardar(lista);
+  // 🔹 Cargar todas las sugerencias
+  Future<List<Sugerencia>> cargarSugerencias() async {
+    try {
+      if (isWeb) {
+        final prefs = await SharedPreferences.getInstance();
+        final data = prefs.getString('sugerencias') ?? '[]';
+        final jsonList = jsonDecode(data) as List;
+        return jsonList.map((e) => Sugerencia.fromJson(e)).toList();
+      } else {
+        final file = await _getLocalFile();
+        if (!await file.exists()) return [];
+        final contenido = await file.readAsString();
+        final jsonList = jsonDecode(contenido) as List;
+        return jsonList.map((e) => Sugerencia.fromJson(e)).toList();
+      }
+    } catch (e) {
+      debugPrint('❌ Error al cargar sugerencias: $e');
+      return [];
     }
   }
 
-  Future<void> eliminar(int id) async {
-    final lista = await listar();
-    lista.removeWhere((s) => s.id == id);
-    await guardar(lista);
+  // 🔹 Guardar sugerencia nueva
+  Future<void> guardarSugerencia(Sugerencia sugerencia) async {
+    final lista = await cargarSugerencias();
+    lista.removeWhere((e) => e.id == sugerencia.id); // evita duplicados
+    lista.add(sugerencia);
+    final jsonString = jsonEncode(lista.map((e) => e.toJson()).toList());
+
+    if (isWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('sugerencias', jsonString);
+    } else {
+      final file = await _getLocalFile();
+      await file.writeAsString(jsonString);
+    }
   }
 
-  Future<void> limpiar() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_key);
+  // 🔹 Limpiar todas las sugerencias (opcional)
+  Future<void> limpiarSugerencias() async {
+    if (isWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('sugerencias');
+    } else {
+      final file = await _getLocalFile();
+      if (await file.exists()) await file.delete();
+    }
   }
 }

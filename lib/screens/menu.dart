@@ -19,6 +19,8 @@ class _MenuScreenState extends State<MenuScreen> {
   @override
   void initState() {
     super.initState();
+
+    // ✅ Mensaje de bienvenida
     Future.delayed(const Duration(seconds: 1), () {
       final auth = context.read<AuthService>();
       auth.showNotification(
@@ -27,6 +29,7 @@ class _MenuScreenState extends State<MenuScreen> {
       );
     });
 
+    // 🔁 Temporizador de refresco
     _timer = Timer.periodic(const Duration(minutes: 2), (_) {
       setState(() {});
     });
@@ -44,6 +47,7 @@ class _MenuScreenState extends State<MenuScreen> {
     final Usuario? usuario = auth.currentUser;
     final screenWidth = MediaQuery.of(context).size.width;
 
+    // 🧭 Menús principales
     final List<Map<String, dynamic>> menus = [
       {
         'titulo': 'Eventos',
@@ -91,14 +95,14 @@ class _MenuScreenState extends State<MenuScreen> {
         'titulo': 'Cumpleaños y aniversarios',
         'subtitulo': 'Celebra junto a tus compañeros',
         'icono': Icons.cake_rounded,
-        'ruta': '/celebraciones', // ✅ corregido: antes era /cumpleanios
+        'ruta': '/celebraciones', // ✅ Correcto
         'colores': [const Color(0xFFE91E63), const Color(0xFFF48FB1)],
       },
       {
         'titulo': 'Calendario y eventos',
         'subtitulo': 'Agenda de actividades laborales',
         'icono': Icons.calendar_month_rounded,
-        'ruta': '/calendario',
+        'ruta': '/calendario_eventos', // ✅ Corregido: antes era /calendario
         'colores': [const Color(0xFF3F51B5), const Color(0xFF7986CB)],
       },
       {
@@ -129,12 +133,15 @@ class _MenuScreenState extends State<MenuScreen> {
       body: SafeArea(
         child: Stack(
           children: [
+            // 🧩 Contenido principal
             SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
                 child: Column(
                   children: [
+                    // 🔸 Botón cerrar sesión
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
@@ -150,6 +157,8 @@ class _MenuScreenState extends State<MenuScreen> {
                         ),
                       ],
                     ),
+
+                    // 🧑‍💼 Avatar de usuario
                     Container(
                       width: 130,
                       height: 130,
@@ -169,6 +178,8 @@ class _MenuScreenState extends State<MenuScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
+
+                    // 🏷️ Nombre y cargo
                     Text(
                       usuario?.nombreCompleto.toUpperCase() ?? '',
                       style: const TextStyle(
@@ -186,6 +197,8 @@ class _MenuScreenState extends State<MenuScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
+
+                    // 🟩 Línea decorativa
                     Container(
                       height: 4,
                       width: screenWidth * 0.9,
@@ -195,6 +208,8 @@ class _MenuScreenState extends State<MenuScreen> {
                       ),
                     ),
                     const SizedBox(height: 30),
+
+                    // 🔹 Menú de opciones
                     Wrap(
                       spacing: 18,
                       runSpacing: 18,
@@ -217,6 +232,8 @@ class _MenuScreenState extends State<MenuScreen> {
                 ),
               ),
             ),
+
+            // 🔔 Notificaciones
             NotificationBanner(
               load: () async {
                 final auth = context.read<AuthService>();
@@ -247,6 +264,7 @@ class _MenuScreenState extends State<MenuScreen> {
     );
   }
 
+  // 🧾 Descripción de usuario
   String _obtenerDescripcionUsuario(Usuario? usuario) {
     if (usuario == null) return 'Sin datos de usuario';
     if (usuario.cargo.isNotEmpty) return 'Cargo: ${usuario.cargo}';
@@ -254,6 +272,7 @@ class _MenuScreenState extends State<MenuScreen> {
     return 'Empleado Nutri Leche';
   }
 
+  // 🧩 Botón individual del menú
   Widget _buildMenuButton(
     BuildContext context,
     String title,
@@ -265,7 +284,10 @@ class _MenuScreenState extends State<MenuScreen> {
     double screenWidth,
   ) {
     return InkWell(
-      onTap: () => Navigator.pushNamed(context, route),
+      onTap: () {
+        // ✅ Navegar a la ruta correcta
+        Navigator.pushNamed(context, route);
+      },
       borderRadius: BorderRadius.circular(20),
       child: Container(
         width: screenWidth * 0.42,

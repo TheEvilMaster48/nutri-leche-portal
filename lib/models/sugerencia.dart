@@ -1,43 +1,47 @@
+import 'dart:convert';
+
 class Sugerencia {
-  final int id;
+  final String id;
+  final String categoria;
   final String titulo;
-  final String mensaje;
-  final String autor;
-  final bool anonimo;
+  final String descripcion;
+  final String? imagenPath; // Nombre del archivo
   final DateTime fecha;
-  final String estado;
+
+  // 🌐 Nuevos campos híbridos
+  final String? base64;     // Web: archivo en Base64
+  final String? rutaLocal;  // Móvil/desktop: ruta local del archivo
 
   Sugerencia({
     required this.id,
+    required this.categoria,
     required this.titulo,
-    required this.mensaje,
-    required this.autor,
-    required this.anonimo,
+    required this.descripcion,
+    this.imagenPath,
     required this.fecha,
-    required this.estado,
+    this.base64,
+    this.rutaLocal,
   });
-
-  factory Sugerencia.fromJson(Map<String, dynamic> json) {
-    return Sugerencia(
-      id: json['id'] is int
-          ? json['id']
-          : int.tryParse(json['id'].toString()) ?? 0,
-      titulo: json['titulo'] ?? '',
-      mensaje: json['mensaje'] ?? '',
-      autor: json['autor'] ?? '',
-      anonimo: json['anonimo'] ?? false,
-      fecha: DateTime.tryParse(json['fecha'] ?? '') ?? DateTime.now(),
-      estado: json['estado'] ?? 'pendiente',
-    );
-  }
 
   Map<String, dynamic> toJson() => {
         'id': id,
+        'categoria': categoria,
         'titulo': titulo,
-        'mensaje': mensaje,
-        'autor': autor,
-        'anonimo': anonimo,
+        'descripcion': descripcion,
+        'imagenPath': imagenPath,
         'fecha': fecha.toIso8601String(),
-        'estado': estado,
+        'base64': base64,
+        'rutaLocal': rutaLocal,
       };
+
+  factory Sugerencia.fromJson(Map<String, dynamic> json) => Sugerencia(
+        id: json['id'],
+        categoria: json['categoria'] ?? 'Sin categoría',
+        titulo: json['titulo'] ?? '',
+        descripcion: json['descripcion'] ?? '',
+        imagenPath: json['imagenPath'],
+        fecha: DateTime.parse(json['fecha']),
+        base64: json['base64'],
+        rutaLocal: json['rutaLocal'],
+      );
 }

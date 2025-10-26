@@ -10,31 +10,36 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # 📅 Calendario
+  # 📅 Calendario de eventos
   table_calendar: ^3.1.2
 
   # 📱 Utilidades generales
   uuid: ^4.5.1
   provider: ^6.1.2
-  shared_preferences: ^2.3.2
+  shared_preferences: ^2.3.3
 
-  # 🌎 Internacionalización
+  # 🌎 Internacionalización y fechas
   intl: ^0.20.2
   flutter_localizations:
     sdk: flutter
 
-  # 📂 Archivos y multimedia
-  path_provider: ^2.1.4
-  file_picker: ^10.3.3
+  # 📂 Archivos, documentos y multimedia
+  path_provider: ^2.1.5
+  file_picker: ^8.1.4
   image_picker: ^1.1.2
+  open_filex: ^4.7.0
+  mime: ^2.0.0
+  universal_html: ^2.2.4
 
-  # 📄 PDF y herramientas
+  # 📄 PDF y herramientas de impresión
   pdf: ^3.11.0
   printing: ^5.12.0
-  universal_html: ^2.2.4
-  mime: ^2.0.0
+  flutter_pdfview: ^1.4.3
 
-  # 📦 Firebase (comentado, sin usar en este proyecto)
+  # 🌐 Navegación a enlaces externos (visor web)
+  url_launcher: ^6.3.1
+
+  # 📦 Firebase (opcional, sin uso actual)
   # firebase_core: ^3.15.2
   # cloud_firestore: ^5.6.12
   # firebase_messaging: ^15.2.10
@@ -47,6 +52,6 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # 🖼️ Activos
+  # 🖼️ Activos de la aplicación
   assets:
     - assets/icono/nutrileche.png
