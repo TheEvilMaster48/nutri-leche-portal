@@ -193,7 +193,7 @@ class _ReconocimientosScreenState extends State<ReconocimientosScreen> {
     await _cargarReconocimientos();
   }
 
-  /// 🗑️ Eliminar un reconocimiento específico
+  /// Boton Eliminar
   Future<void> _eliminarReconocimiento(int id) async {
     final servicio = ReconocimientoService();
     await servicio.eliminar(id);
