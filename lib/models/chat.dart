@@ -1,47 +1,26 @@
-class Chat {
-  final String id;
-  final String userName;
-  final String? lastMessage;
-  final DateTime? lastMessageTime;
+class Mensaje {
+  final String usuario;
+  final String contenido;
+  final DateTime fechaHora;
+  final bool esPropio;
 
-  Chat({
-    required this.id,
-    required this.userName,
-    this.lastMessage,
-    this.lastMessageTime,
+  Mensaje({
+    required this.usuario,
+    required this.contenido,
+    required this.fechaHora,
+    required this.esPropio,
   });
 
-  Chat copyWith({
-    String? id,
-    String? userName,
-    String? lastMessage,
-    DateTime? lastMessageTime,
-  }) {
-    return Chat(
-      id: id ?? this.id,
-      userName: userName ?? this.userName,
-      lastMessage: lastMessage ?? this.lastMessage,
-      lastMessageTime: lastMessageTime ?? this.lastMessageTime,
-    );
-  }
+  Map<String, dynamic> toJson() => {
+        'usuario': usuario,
+        'contenido': contenido,
+        'fechaHora': fechaHora.toIso8601String(),
+      };
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'userName': userName,
-      'lastMessage': lastMessage,
-      'lastMessageTime': lastMessageTime?.toIso8601String(),
-    };
-  }
-
-  factory Chat.fromMap(Map<String, dynamic> map) {
-    return Chat(
-      id: map['id'] ?? '',
-      userName: map['userName'] ?? '',
-      lastMessage: map['lastMessage'],
-      lastMessageTime: map['lastMessageTime'] != null
-          ? DateTime.tryParse(map['lastMessageTime'])
-          : null,
-    );
-  }
+  factory Mensaje.fromJson(Map<String, dynamic> json) => Mensaje(
+        usuario: json['usuario'] ?? '',
+        contenido: json['contenido'] ?? '',
+        fechaHora: DateTime.tryParse(json['fechaHora'] ?? '') ?? DateTime.now(),
+        esPropio: false,
+      );
 }

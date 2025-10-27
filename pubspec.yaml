@@ -1,6 +1,7 @@
 name: nutri_leche
 description: Portal de Empleados Nutri Leche Ecuador
 publish_to: 'none'
+
 version: 1.0.0+1
 
 environment:
@@ -25,7 +26,7 @@ dependencies:
 
   # 📂 Archivos, documentos y multimedia
   path_provider: ^2.1.5
-  file_picker: ^8.1.4
+  file_picker: ^10.3.3
   image_picker: ^1.1.2
   open_filex: ^4.7.0
   mime: ^2.0.0
@@ -37,12 +38,17 @@ dependencies:
   flutter_pdfview: ^1.4.3
 
   # 🌐 Navegación a enlaces externos (visor web)
-  url_launcher: ^6.3.1
+  url_launcher: ^6.3.2
 
-  # 📦 Firebase (opcional, sin uso actual)
-  # firebase_core: ^3.15.2
-  # cloud_firestore: ^5.6.12
-  # firebase_messaging: ^15.2.10
+  # 🛰️ Chat en tiempo real local (sin servidor)
+  permission_handler: ^11.3.0
+  flutter_nearby_connections: ^1.1.2
+  telephony: ^0.2.0
+  vibration: ^1.7.4
+  socket_io_client: ^3.1.2
+
+  # ✅ Notificaciones locales (agregada para compatibilidad con el sistema)
+  flutter_local_notifications: ^17.2.1+2
 
 dev_dependencies:
   flutter_test:

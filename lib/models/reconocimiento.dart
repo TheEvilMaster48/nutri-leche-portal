@@ -3,10 +3,11 @@ class Reconocimiento {
   final String titulo;
   final String descripcion;
   final String autor;
-  final String otorgadoA; // persona reconocida
+  final String otorgadoA;
   final String departamento;
-  final String tipo; // Ej: Empleado del mes, Trabajo en equipo, etc.
+  final String tipo;
   final DateTime fecha;
+  final List<String> archivos;
 
   Reconocimiento({
     required this.id,
@@ -17,9 +18,15 @@ class Reconocimiento {
     required this.departamento,
     required this.tipo,
     required this.fecha,
+    this.archivos = const [],
   });
 
   factory Reconocimiento.fromJson(Map<String, dynamic> json) {
+    final archivosJson = json['archivos'];
+    final archivosSeguros = archivosJson is List
+        ? archivosJson.map((a) => a.toString()).toList()
+        : <String>[];
+
     return Reconocimiento(
       id: json['id'] is int
           ? json['id']
@@ -31,6 +38,7 @@ class Reconocimiento {
       departamento: json['departamento'] ?? '',
       tipo: json['tipo'] ?? '',
       fecha: DateTime.tryParse(json['fecha'] ?? '') ?? DateTime.now(),
+      archivos: archivosSeguros,
     );
   }
 
@@ -43,5 +51,6 @@ class Reconocimiento {
         'departamento': departamento,
         'tipo': tipo,
         'fecha': fecha.toIso8601String(),
+        'archivos': archivos,
       };
 }

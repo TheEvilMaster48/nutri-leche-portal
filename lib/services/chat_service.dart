@@ -1,46 +1,48 @@
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../models/chat.dart';
-import '../models/mensaje.dart';
 
-/// Servicio de chat 100 % local (sin Firebase)
-/// Guarda datos temporalmente en memoria.
+/// ChatService maneja la conexión WebSocket en tiempo real
 class ChatService {
-  final List<Chat> _chats = [];
-  final Map<String, List<Mensaje>> _mensajesPorChat = {};
+  late IO.Socket _socket;
+  final List<Function(Mensaje)> _listeners = [];
 
-  /// Crear un nuevo chat local
-  Future<void> createChat(Chat chat) async {
-    _chats.add(chat);
+  /// Conecta al servidor Socket.IO
+  void conectar(String usuario) {
+    _socket = IO.io(
+      'https://socket-io-chat-h9jt.herokuapp.com/', // servidor público de prueba
+      IO.OptionBuilder()
+          .setTransports(['websocket'])
+          .enableAutoConnect()
+          .build(),
+    );
+
+    _socket.onConnect((_) {
+      print('✅ Conectado al servidor WebSocket');
+      _socket.emit('join', usuario);
+    });
+
+    _socket.on('message', (data) {
+      final mensaje = Mensaje.fromJson(Map<String, dynamic>.from(data));
+      for (var fn in _listeners) {
+        fn(mensaje);
+      }
+    });
+
+    _socket.onDisconnect((_) => print('❌ Desconectado del servidor'));
   }
 
-  /// Obtener lista de chats locales
-  Stream<List<Chat>> getChats() async* {
-    yield _chats;
+  /// Enviar mensaje al servidor
+  void enviarMensaje(Mensaje mensaje) {
+    _socket.emit('message', mensaje.toJson());
   }
 
-  /// Obtener mensajes de un chat específico
-  Stream<List<Mensaje>> getMensajes(String chatId) async* {
-    yield _mensajesPorChat[chatId] ?? [];
+  /// Escuchar mensajes entrantes
+  void onMensaje(Function(Mensaje) listener) {
+    _listeners.add(listener);
   }
 
-  /// Enviar un mensaje
-  Future<void> sendMensaje(Mensaje mensaje) async {
-    final lista = _mensajesPorChat[mensaje.chatId] ?? [];
-    lista.insert(0, mensaje);
-    _mensajesPorChat[mensaje.chatId] = lista;
-
-    // Actualizar info del chat
-    final chatIndex = _chats.indexWhere((c) => c.id == mensaje.chatId);
-    if (chatIndex != -1) {
-      _chats[chatIndex] = _chats[chatIndex].copyWith(
-        lastMessage: mensaje.content,
-        lastMessageTime: mensaje.timestamp,
-      );
-    }
-  }
-
-  /// Eliminar un chat y sus mensajes
-  Future<void> deleteChat(String chatId) async {
-    _chats.removeWhere((c) => c.id == chatId);
-    _mensajesPorChat.remove(chatId);
+  /// Desconectar del servidor
+  void desconectar() {
+    _socket.disconnect();
   }
 }

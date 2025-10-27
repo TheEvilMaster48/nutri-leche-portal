@@ -3,14 +3,9 @@ import 'package:flutter/material.dart';
 import '../models/notification_item.dart';
 
 // Tipos de notificación disponibles
-enum NotificationType {
-  success,
-  error,
-  info,
-  warning,
-}
+enum NotificationType { success, error, info, warning }
 
-// Banner Flotante
+// Widget principal del banner flotante
 class NotificationBanner extends StatefulWidget {
   final Future<List<NotificationItem>> Function()? load;
   final void Function(NotificationItem item)? onTapItem;
@@ -26,8 +21,13 @@ class NotificationBanner extends StatefulWidget {
   @override
   State<NotificationBanner> createState() => _NotificationBannerState();
 
-  //  Método estático para SnackBars simples (crear/modificar evento)
-  static void show(BuildContext context, String message, NotificationType type) {
+  /// 🔹 Método estático para SnackBars simples
+  static void show(
+    BuildContext context,
+    String message,
+    NotificationType type, {
+    Duration duration = const Duration(seconds: 5), // ✅ ahora es válido
+  }) {
     final color = switch (type) {
       NotificationType.success => Colors.green.shade600,
       NotificationType.error => Colors.redAccent,
@@ -41,13 +41,6 @@ class NotificationBanner extends StatefulWidget {
       NotificationType.warning => Icons.warning_amber_rounded,
       NotificationType.info => Icons.info_outline,
     };
-
-    // ⏱ Duraciones actualizadas
-    final duration = Duration(
-      seconds: (type == NotificationType.success || type == NotificationType.info)
-          ? 10
-          : 20,
-    );
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -81,8 +74,6 @@ class _NotificationBannerState extends State<NotificationBanner> {
   void initState() {
     super.initState();
     _refresh();
-
-    // Recarga automática cada 2 minutos
     if (widget.load != null) {
       _timer = Timer.periodic(const Duration(minutes: 2), (_) => _refresh());
     }
@@ -104,7 +95,6 @@ class _NotificationBannerState extends State<NotificationBanner> {
     _autoHideTimer?.cancel();
     final tipo = item.tipo.toLowerCase();
 
-    // ⏱ Ajustar duración automática
     int seconds = 10;
     if (tipo.contains('error') || tipo.contains('urgente') || tipo.contains('warning')) {
       seconds = 20;
@@ -114,7 +104,7 @@ class _NotificationBannerState extends State<NotificationBanner> {
       if (mounted) setState(() => _items = []);
     });
 
-    // Recordatorio cada 2 minutos solo para eventos o notificaciones Urgentes
+    // Reaparición de alerta urgente
     if (tipo.contains('error') || tipo.contains('urgente') || tipo.contains('warning')) {
       Timer(const Duration(minutes: 2), () {
         if (mounted && _items.isEmpty) {

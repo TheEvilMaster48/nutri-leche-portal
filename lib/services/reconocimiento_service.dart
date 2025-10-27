@@ -9,8 +9,20 @@ class ReconocimientoService {
     final prefs = await SharedPreferences.getInstance();
     final data = prefs.getString(_key);
     if (data == null) return [];
-    final lista = jsonDecode(data) as List;
-    return lista.map((e) => Reconocimiento.fromJson(e)).toList();
+
+    try {
+      final lista = jsonDecode(data) as List;
+      return lista.map((e) {
+        final item = Map<String, dynamic>.from(e);
+        if (item['archivos'] == null || item['archivos'] is! List) {
+          item['archivos'] = <String>[];
+        }
+        return Reconocimiento.fromJson(item);
+      }).toList();
+    } catch (e) {
+      await prefs.remove(_key);
+      return [];
+    }
   }
 
   Future<void> guardar(List<Reconocimiento> reconocimientos) async {
@@ -36,5 +48,14 @@ class ReconocimientoService {
   Future<void> limpiar() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_key);
+  }
+
+  Future<void> actualizar(Reconocimiento actualizado) async {
+    final lista = await listar();
+    final index = lista.indexWhere((r) => r.id == actualizado.id);
+    if (index != -1) {
+      lista[index] = actualizado;
+      await guardar(lista);
+    }
   }
 }

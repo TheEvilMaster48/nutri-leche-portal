@@ -20,7 +20,7 @@ class _MenuScreenState extends State<MenuScreen> {
   void initState() {
     super.initState();
 
-    // ✅ Mensaje de bienvenida
+    // Mensaje de Bienvenida
     Future.delayed(const Duration(seconds: 1), () {
       final auth = context.read<AuthService>();
       auth.showNotification(
@@ -29,7 +29,7 @@ class _MenuScreenState extends State<MenuScreen> {
       );
     });
 
-    // 🔁 Temporizador de refresco
+    // Temporizador de Refresco
     _timer = Timer.periodic(const Duration(minutes: 2), (_) {
       setState(() {});
     });
@@ -47,7 +47,7 @@ class _MenuScreenState extends State<MenuScreen> {
     final Usuario? usuario = auth.currentUser;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    // 🧭 Menús principales
+    // Menús Principales
     final List<Map<String, dynamic>> menus = [
       {
         'titulo': 'Eventos',
@@ -102,7 +102,7 @@ class _MenuScreenState extends State<MenuScreen> {
         'titulo': 'Calendario y eventos',
         'subtitulo': 'Agenda de actividades laborales',
         'icono': Icons.calendar_month_rounded,
-        'ruta': '/calendario_eventos', // ✅ Corregido: antes era /calendario
+        'ruta': '/calendario_eventos', // ✅ Corregido
         'colores': [const Color(0xFF3F51B5), const Color(0xFF7986CB)],
       },
       {
@@ -129,11 +129,38 @@ class _MenuScreenState extends State<MenuScreen> {
     ];
 
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 1, 121, 145),
       body: SafeArea(
         child: Stack(
           children: [
-            // 🧩 Contenido principal
+            // FONDO PRINCIPAL (COLOR Y LOGOTIPO)
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFF01579B), // Azul Oscuro
+                    Color(0xFF0277BD), // Azul Medio
+                    Color(0xFF03A9F4), // Celeste Brillante
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
+
+
+
+            // Logo centrado, detrás del contenido
+            Align(
+              alignment: Alignment.center,
+              child: Image.asset(
+                'assets/icono/nutrileche.png',
+                width: 700,
+                height: 700,
+                fit: BoxFit.contain,
+              ),
+            ),
+
+            // CONTENIDO PRINCIPAL
             SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
@@ -141,7 +168,7 @@ class _MenuScreenState extends State<MenuScreen> {
                     const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
                 child: Column(
                   children: [
-                    // 🔸 Botón cerrar sesión
+                    // Botón cerrar sesión
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
@@ -158,7 +185,9 @@ class _MenuScreenState extends State<MenuScreen> {
                       ],
                     ),
 
-                    // 🧑‍💼 Avatar de usuario
+
+
+                    // Avatar de usuario
                     Container(
                       width: 130,
                       height: 130,
@@ -174,12 +203,15 @@ class _MenuScreenState extends State<MenuScreen> {
                       ),
                       child: const CircleAvatar(
                         backgroundColor: Colors.white24,
-                        child: Icon(Icons.person, size: 80, color: Colors.white),
+                        child:
+                            Icon(Icons.person, size: 80, color: Colors.white),
                       ),
                     ),
                     const SizedBox(height: 16),
 
-                    // 🏷️ Nombre y cargo
+
+
+                    // Nombre y Cargo
                     Text(
                       usuario?.nombreCompleto.toUpperCase() ?? '',
                       style: const TextStyle(
@@ -198,7 +230,9 @@ class _MenuScreenState extends State<MenuScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // 🟩 Línea decorativa
+
+
+                    // Línea Decorativa
                     Container(
                       height: 4,
                       width: screenWidth * 0.9,
@@ -233,7 +267,9 @@ class _MenuScreenState extends State<MenuScreen> {
               ),
             ),
 
-            // 🔔 Notificaciones
+
+
+            // Notificaciones 
             NotificationBanner(
               load: () async {
                 final auth = context.read<AuthService>();
@@ -264,7 +300,8 @@ class _MenuScreenState extends State<MenuScreen> {
     );
   }
 
-  // 🧾 Descripción de usuario
+
+  // Descripción de Usuario 
   String _obtenerDescripcionUsuario(Usuario? usuario) {
     if (usuario == null) return 'Sin datos de usuario';
     if (usuario.cargo.isNotEmpty) return 'Cargo: ${usuario.cargo}';
@@ -272,7 +309,8 @@ class _MenuScreenState extends State<MenuScreen> {
     return 'Empleado Nutri Leche';
   }
 
-  // 🧩 Botón individual del menú
+
+  // Botón de los Menús
   Widget _buildMenuButton(
     BuildContext context,
     String title,
@@ -285,7 +323,6 @@ class _MenuScreenState extends State<MenuScreen> {
   ) {
     return InkWell(
       onTap: () {
-        // ✅ Navegar a la ruta correcta
         Navigator.pushNamed(context, route);
       },
       borderRadius: BorderRadius.circular(20),
